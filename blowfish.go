@@ -2,6 +2,8 @@ package blowfish
 
 import (
 	"encoding/binary"
+	"encoding/hex"
+	"errors"
 	"math"
 )
 
@@ -41,9 +43,9 @@ func F(xL uint32) uint32 {
 	return uint32(op1 + op2)
 }
 
-func Encrypt(text []byte)[]byte {
+func EncryptBlock(blockText []byte) []byte {
 	var xL, xR uint32
-	auxL, auxR := SplitText(text[:])
+	auxL, auxR := SplitText(blockText[:])
 
 	xL = binary.BigEndian.Uint32(auxL)
 	xR = binary.BigEndian.Uint32(auxR)
@@ -52,7 +54,7 @@ func Encrypt(text []byte)[]byte {
 
 	for i := 0; i < 16; i++ {
 		xL = xL ^ pArray[i]
-		xR = F(xL) ^xR
+		xR = F(xL) ^ xR
 
 		tmp = xL
 		xL = xR
@@ -71,9 +73,9 @@ func Encrypt(text []byte)[]byte {
 	return cypheredText
 }
 
-func Decrypt(text []byte)[]byte {
+func DecryptBlock(blockText []byte) []byte {
 	var xL, xR uint32
-	auxL, auxR := SplitText(text[:])
+	auxL, auxR := SplitText(blockText[:])
 
 	xL = binary.BigEndian.Uint32(auxL)
 	xR = binary.BigEndian.Uint32(auxR)
@@ -99,4 +101,52 @@ func Decrypt(text []byte)[]byte {
 	decypheredText := MergeText(xL, xR)
 
 	return decypheredText
+}
+
+func Encrypt(text string) string {
+	var cypheredText []byte
+	clearText := []byte(text)
+
+	// Add spacebars (32) if the text lenght is < 8
+	nBlocks := len(clearText) / 8
+
+	if len(clearText)%8 != 0 {
+		for i := len(clearText); i < 8; i++ {
+			clearText = append(clearText, 32)
+		}
+
+		nBlocks++
+	}
+
+	for i := 0; i < nBlocks; i++ {
+		cypheredText = append(cypheredText, EncryptBlock(clearText[8*i:(i+1)*8])...)
+	}
+
+	return hex.EncodeToString(cypheredText)
+}
+
+func Decrypt(text string) (string, error) {
+	var decypheredText []byte
+	opaqueText, err := hex.DecodeString(text)
+
+	if len(text)%8 != 0 {
+		return "", errors.New("corrupted encrypted message")
+	}
+
+	// Add spacebars (32) if the text lenght is < 8
+	nBlocks := len(opaqueText) / 8
+
+	if len(opaqueText)%8 != 0 {
+		for i := len(opaqueText); i < 8; i++ {
+			opaqueText = append(opaqueText, 32)
+		}
+
+		nBlocks++
+	}
+
+	for i := 0; i < nBlocks; i++ {
+		decypheredText = append(decypheredText, DecryptBlock(opaqueText[8*i:(i+1)*8])...)
+	}
+
+	return string(decypheredText), err
 }

@@ -2,18 +2,18 @@ package blowfish
 
 import (
 	"encoding/binary"
-	"testing"
 	"reflect"
+	"testing"
 )
 
-func validateTestString (t *testing.T, got, want string) {
+func validateTestString(t *testing.T, got, want string) {
 	if got != want {
 		t.Errorf("expected '%s' but got '%s'", want, got)
 	}
 }
 
-func validateTestByte (t *testing.T, got, want []byte) {
-	if (!reflect.DeepEqual(got, want)) {
+func validateTestByte(t *testing.T, got, want []byte) {
+	if !reflect.DeepEqual(got, want) {
 		t.Errorf("expected '%s' but got '%s'", want, got)
 	}
 }
@@ -66,12 +66,21 @@ func TestUtils(t *testing.T) {
 }
 
 func TestBlowfish(t *testing.T) {
-	t.Run("Encrypt", func(t *testing.T) {
+	t.Run("EncryptBlock", func(t *testing.T) {
 		ogText := []byte("abcdefgh")
 
-		cypheredText := Encrypt(ogText)
-		decypheredText := Decrypt(cypheredText)
+		cypheredText := EncryptBlock(ogText)
+		decypheredText := DecryptBlock(cypheredText)
 
 		validateTestByte(t, decypheredText, ogText)
+	})
+
+	t.Run("Encrypt Text (< 8)", func(t *testing.T) {
+		ogText := "Hoje falaremos sobre as plantas"
+
+		cypheredText := Encrypt(ogText)
+		decypheredText, _ := Decrypt(cypheredText)
+
+		validateTestString(t, decypheredText, ogText)
 	})
 }
