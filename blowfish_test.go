@@ -5,11 +5,11 @@ import (
 	"testing"
 )
 
-// func validateTest (t *testing.T, got, want string) {
-// 	if got != want {
-// 		t.Errorf("expected '%s' but got '%s'", want, got)
-// 	}
-// }
+func validateTest (t *testing.T, got, want string) {
+	if got != want {
+		t.Errorf("expected '%s' but got '%s'", want, got)
+	}
+}
 func TestUtils(t *testing.T) {
 	t.Run("Split Function (even)", func(t *testing.T) {
 		ogText := []byte("abcdefgh")
@@ -45,24 +45,27 @@ func TestUtils(t *testing.T) {
 		}
 	})
 
-	t.Run("F Function", func(t *testing.T) {
-		ogText := []byte("abcdefgh")
+	t.Run("Merge Function", func(t *testing.T) {
+		expected := "abcdefgh"
+		ogText := []byte(expected)
 
-		xL, _ := SplitText(ogText)
+		xL, xR := SplitText(ogText)
 
-		F(binary.BigEndian.Uint32(xL))
+		got := string(MergeText(binary.BigEndian.Uint32(xL), binary.BigEndian.Uint32(xR)))
+
+		validateTest(t, got, expected)
 	})
 }
 
 func TestBlowfish(t *testing.T) {
 	t.Run("Encrypt", func(t *testing.T) {
-		ogText := []byte("abcdefg")
-		var text [8]byte
+		ogText := []byte("cbcdefgh")
+		// expected := "asuheiause"
 
-		xL, _ := SplitText(ogText)
+		cypheredText := Encrypt(ogText)
+		decypheredText := Decrypt(cypheredText)
 
-		copy(text[:], ogText)
-		Encrypt(text)
-		F(binary.BigEndian.Uint32(xL))
+		t.Error(ogText, cypheredText, decypheredText)
+		// validateTest(t, string(got), expected)
 	})
 }
