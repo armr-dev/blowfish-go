@@ -1,6 +1,7 @@
 package blowfish
 
 import (
+	"encoding/binary"
 	"testing"
 )
 
@@ -44,4 +45,24 @@ func TestUtils(t *testing.T) {
 		}
 	})
 
+	t.Run("F Function", func(t *testing.T) {
+		ogText := []byte("abcdefgh")
+
+		xL, _ := SplitText(ogText)
+
+		F(binary.BigEndian.Uint32(xL))
+	})
+}
+
+func TestBlowfish(t *testing.T) {
+	t.Run("Encrypt", func(t *testing.T) {
+		ogText := []byte("abcdefg")
+		var text [8]byte
+
+		xL, _ := SplitText(ogText)
+
+		copy(text[:], ogText)
+		Encrypt(text)
+		F(binary.BigEndian.Uint32(xL))
+	})
 }
